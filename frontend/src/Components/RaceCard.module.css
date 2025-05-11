@@ -1,0 +1,25 @@
+.card-hover {
+  transition: border 0.2s ease;
+  background-position: center;
+  background-size: cover;
+  cursor: pointer;
+}
+.card-hover:hover {
+  /* background-color: var(--mantine-color-default-hover); */
+  /* transform: scale(1.01); */
+  border-color: var(--mantine-color-f1-red-5);
+}
+.overlay {
+  background-color: transparent;
+  background-image: light-dark(
+    linear-gradient(105deg, var(--mantine-color-black) 20%, #312f2f 50%, var(--mantine-color-black) 100%),
+    linear-gradient(105deg, var(--mantine-color-black) 20%, #312f2f 50%, var(--mantine-color-black) 100%)
+  );
+}
+.content {
+  position: absolute;
+  inset: 0;
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-md) 0 var(--mantine-spacing-md);
+  z-index: 1;
+  color: white;
+}

@@ -1,0 +1,11 @@
+.link {
+  margin-top: var(--mantine-spacing-sm);
+  padding-top: var(--mantine-spacing-sm) !important;
+  padding-bottom: var(--mantine-spacing-sm) !important;
+}
+.link:hover:not([data-active]) {
+  background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-default-hover)) !important;
+}
+.navbar {
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-8)) !important;
+}

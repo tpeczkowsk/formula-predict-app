@@ -1,0 +1,12 @@
+.header {
+  border-bottom: 0;
+  color: white;
+}
+.header_name {
+  /* letter-spacing: 2px; */
+  font-family: "Formula1-Wide, sans-serif";
+}
+.f1_logo {
+  background: url("../../public/f1_logo.svg") no-repeat center;
+  border: 2px solid white;
+}
