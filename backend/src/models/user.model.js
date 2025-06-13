@@ -6,6 +6,10 @@ const BetSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    race: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Race",
+    },
     raceName: String,
     season: Number,
     driverBets: {
