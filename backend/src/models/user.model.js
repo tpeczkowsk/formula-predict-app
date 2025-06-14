@@ -2,10 +2,6 @@ import mongoose from "mongoose";
 
 const BetSchema = new mongoose.Schema(
   {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
     race: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Race",

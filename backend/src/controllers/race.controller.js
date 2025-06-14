@@ -1,4 +1,6 @@
 import Race from "../models/race.model.js";
+import User from "../models/user.model.js";
+import mongoose from "mongoose";
 
 // Create (C) - utworzenie nowego wyścigu
 export const createRace = async (req, res) => {
@@ -187,5 +189,79 @@ export const getRacesBySeason = async (req, res) => {
     res.status(200).json(races);
   } catch (error) {
     res.status(500).json({ message: "Wystąpił błąd podczas pobierania wyścigów z danego sezonu", error: error.message });
+  }
+};
+
+// Pobierz tablicę liderów dla konkretnego wyścigu
+export const getRaceLeaderboard = async (req, res) => {
+  try {
+    const { raceId } = req.params;
+
+    // Sprawdź czy wyścig istnieje
+    const race = await Race.findById(raceId).exec();
+    if (!race) {
+      return res.status(404).json({ message: "Nie znaleziono wyścigu" });
+    }
+
+    const leaderboard = await User.aggregate([
+      // Rozwiń tablicę zakładów
+      { $unwind: "$bets" },
+      // Filtruj tylko zakłady dla danego wyścigu
+      { $match: { "bets.race": raceId } },
+      // Wybierz potrzebne pola
+      {
+        $project: {
+          username: 1,
+          points: "$bets.awardedPoints",
+          betId: "$bets._id",
+        },
+      },
+      // Posortuj malejąco wg punktów
+      {
+        $sort: {
+          points: -1,
+          username: 1,
+        },
+      },
+    ]).exec();
+
+    res.status(200).json(leaderboard);
+  } catch (error) {
+    res.status(500).json({ message: "Wystąpił błąd podczas pobierania tablicy liderów wyścigu", error: error.message });
+  }
+};
+
+// Pobierz dashboard dla użytkownika i wyścigu
+export const getUserRaceDashboard = async (req, res) => {
+  try {
+    const { userId, raceId } = req.params;
+
+    // Sprawdź czy ID są prawidłowymi ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(raceId)) {
+      return res.status(400).json({ message: "Nieprawidłowy format ID" });
+    }
+
+    // Pobierz dane wyścigu
+    const race = await Race.findById(raceId).exec();
+    if (!race) {
+      return res.status(404).json({ message: "Nie znaleziono wyścigu" });
+    }
+
+    // Pobierz zakład użytkownika dla tego wyścigu (jeśli istnieje)
+    const user = await User.findOne({ _id: userId, "bets.race": raceId }, { "bets.$": 1, username: 1 }).exec();
+
+    // Przygotuj odpowiedź
+    const dashboard = {
+      race: race,
+      user: {
+        id: userId,
+        username: user ? user.username : null,
+      },
+      bet: user && user.bets && user.bets.length > 0 ? user.bets[0] : null,
+    };
+
+    res.status(200).json(dashboard);
+  } catch (error) {
+    res.status(500).json({ message: "Wystąpił błąd podczas pobierania danych dashboardu", error: error.message });
   }
 };

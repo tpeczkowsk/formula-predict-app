@@ -36,7 +36,6 @@ export const createBet = async (req, res) => {
 
     // Utwórz nowy zakład bezpośrednio w dokumencie użytkownika
     const newBet = {
-      user: userId,
       race: raceId,
       raceName,
       season,
@@ -46,7 +45,7 @@ export const createBet = async (req, res) => {
       awardedPoints: 0,
     };
 
-    // Dodaj zakład do użytkownika za pomocą operacji aktualizacji
+    // Dodaj zakład do użytkownika
     const result = await User.findByIdAndUpdate(userId, { $push: { bets: newBet } }, { new: true, runValidators: true }).exec();
 
     if (!result) {
@@ -130,7 +129,7 @@ export const updateBet = async (req, res) => {
       updates["bets.$.awardedPoints"] = updateData.awardedPoints;
     }
 
-    // Wykonaj aktualizację
+    // Wykonaj aktualizację betu
     const result = await User.findOneAndUpdate({ _id: userId, "bets._id": betId }, { $set: updates }, { new: true, runValidators: true }).exec();
 
     if (!result) {
@@ -156,7 +155,7 @@ export const deleteBet = async (req, res) => {
       return res.status(400).json({ message: "Nieprawidłowy format ID" });
     }
 
-    // Usuń zakład bezpośrednio przez aktualizację dokumentu użytkownika
+    // Usuń zakład uzytkownika
     const result = await User.findByIdAndUpdate(userId, { $pull: { bets: { _id: betId } } }, { new: true }).exec();
 
     if (!result) {

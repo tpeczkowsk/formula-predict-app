@@ -27,6 +27,14 @@ const RaceSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    flagFileName: {
+      type: String,
+      default: "default-flag.png",
+    },
+    countryName: {
+      type: String,
+      default: "",
+    },
     driverResults: {
       p1: String,
       p2: String,

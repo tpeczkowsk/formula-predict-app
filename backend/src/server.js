@@ -23,9 +23,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/api", (req, res) => {
-  res.status(200).json({ message: "API is working" });
-});
+// app.use("/api", (req, res) => {
+//   res.status(200).json({ message: "API is working" });
+// });
 
 app.use("/api/users", userRoutes);
 app.use("/api/bets", betRoutes);

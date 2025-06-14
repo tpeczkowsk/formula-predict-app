@@ -1,11 +1,11 @@
-import User from "../models/user.model";
+import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
 // Create (C)
 export const createUser = async (req, res) => {
   try {
-    const { username } = req.body;
+    const { username, role } = req.body;
     // sprawdzenie, czy nazwa użytkownika jest unikalna
     const existingUser = await User.findOne({ username }).exec();
     if (existingUser) {
@@ -20,6 +20,10 @@ export const createUser = async (req, res) => {
     const password = crypto.randomBytes(8).toString("hex");
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // sprawdzenie poprawności roli (jeśli podana)
+    const validRoles = ["user", "admin"];
+    const userRole = role && validRoles.includes(role) ? role : "user";
+
     // tworzenie nowego użytkownika
     const newUser = new User({
       username,
@@ -29,7 +33,7 @@ export const createUser = async (req, res) => {
       tokenExpiryTime,
       isRegistered: false,
       isVerified: false,
-      role: "user",
+      role: userRole,
       pointsSum: 0,
       bets: [],
     });
@@ -43,6 +47,7 @@ export const createUser = async (req, res) => {
         id: savedUser._id,
         username: savedUser.username,
         email: savedUser.email,
+        role: savedUser.role,
         registrationToken: savedUser.registrationToken,
         tokenExpiryTime: savedUser.tokenExpiryTime,
       },
@@ -107,6 +112,7 @@ export const registerUser = async (req, res) => {
 // Read (R)
 export const getAllUsers = async (req, res) => {
   try {
+    // znajdz wszystkich użytkowników
     const users = await User.find().select("-password -registrationToken -tokenExpiryTime").exec();
     res.status(200).json(users);
   } catch (error) {
@@ -118,6 +124,7 @@ export const getAllUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const userId = req.params.id;
+    // znajdz pojedynczego użytkownika po ID
     const user = await User.findById(userId).select("-password -registrationToken -tokenExpiryTime").exec();
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -147,7 +154,7 @@ export const updateUser = async (req, res) => {
 
     // aktualizacja użytkownika
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true })
-      .select("-password -registrationToken -tokenExpiryTime -bets")
+      .select("-password -registrationToken -tokenExpiryTime")
       .exec();
 
     if (!updatedUser) {
@@ -173,5 +180,31 @@ export const deleteUser = async (req, res) => {
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Pobierz tablicę liderów (wszyscy użytkownicy posortowani wg sumy punktów)
+export const getLeaderboard = async (req, res) => {
+  try {
+    const leaderboard = await User.aggregate([
+      // Wybierz tylko potrzebne pola
+      {
+        $project: {
+          username: 1,
+          pointsSum: 1,
+        },
+      },
+      // Posortuj malejąco wg punktów
+      {
+        $sort: {
+          pointsSum: -1,
+          username: 1, // W przypadku równych punktów, sortuj alfabetycznie
+        },
+      },
+    ]).exec();
+
+    res.status(200).json(leaderboard);
+  } catch (error) {
+    res.status(500).json({ message: "Wystąpił błąd podczas pobierania tablicy liderów", error: error.message });
   }
 };
