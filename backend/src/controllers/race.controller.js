@@ -197,17 +197,25 @@ export const getRaceLeaderboard = async (req, res) => {
   try {
     const { raceId } = req.params;
 
+    // Sprawdź czy ID jest prawidłowym ObjectId
+    if (!mongoose.Types.ObjectId.isValid(raceId)) {
+      return res.status(400).json({ message: "Nieprawidłowy format ID wyścigu" });
+    }
+
     // Sprawdź czy wyścig istnieje
     const race = await Race.findById(raceId).exec();
     if (!race) {
       return res.status(404).json({ message: "Nie znaleziono wyścigu" });
     }
 
+    // Konwertuj raceId na ObjectId przed użyciem w agregacji
+    const objectIdRaceId = new mongoose.Types.ObjectId(raceId);
+
     const leaderboard = await User.aggregate([
       // Rozwiń tablicę zakładów
       { $unwind: "$bets" },
       // Filtruj tylko zakłady dla danego wyścigu
-      { $match: { "bets.race": raceId } },
+      { $match: { "bets.race": objectIdRaceId } },
       // Wybierz potrzebne pola
       {
         $project: {
