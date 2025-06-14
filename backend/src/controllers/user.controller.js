@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { generateToken } from "../lib/utils.js";
 
 // Create (C)
 export const createUser = async (req, res) => {
@@ -113,7 +114,7 @@ export const registerUser = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     // znajdz wszystkich użytkowników
-    const users = await User.find().select("-password -registrationToken -tokenExpiryTime").exec();
+    const users = await User.find().select("-password -registrationToken -tokenExpiryTime -bets").exec();
     res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -206,5 +207,48 @@ export const getLeaderboard = async (req, res) => {
     res.status(200).json(leaderboard);
   } catch (error) {
     res.status(500).json({ message: "Wystąpił błąd podczas pobierania tablicy liderów", error: error.message });
+  }
+};
+
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ message: "Invalid password" });
+    }
+    generateToken(user._id, res);
+    res.status(200).json({
+      _id: user._id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+export const logoutUser = async (req, res) => {
+  try {
+    res.cookie("jwt", "", { maxAge: 0 });
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.log("Error in user logout: ", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const checkAuth = async (req, res) => {
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.log("Error in checking auth: ", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };

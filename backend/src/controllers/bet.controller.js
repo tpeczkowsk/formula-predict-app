@@ -4,7 +4,8 @@ import mongoose from "mongoose";
 // Create - utworzenie zakładu dla danego użytkownika i wyścigu
 export const createBet = async (req, res) => {
   try {
-    const { userId, raceId, raceName, season, driverBets, bonusBets } = req.body;
+    const userId = req.user._id; // Pobierz ID użytkownika z tokena
+    const { raceId, raceName, season, driverBets, bonusBets } = req.body;
 
     // Sprawdź, czy wszystkie wymagane pola są podane
     if (!userId || !raceId || !raceName || !season || !driverBets || !bonusBets) {
@@ -64,7 +65,8 @@ export const createBet = async (req, res) => {
 // Read - odczytanie zakładu użytkownika
 export const getBetById = async (req, res) => {
   try {
-    const { userId, betId } = req.params;
+    const userId = req.user._id; // Pobierz ID użytkownika z tokena
+    const { betId } = req.params;
 
     // Sprawdź, czy ID jest prawidłowym obiektem ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(betId)) {
@@ -87,7 +89,8 @@ export const getBetById = async (req, res) => {
 // Update - aktualizacja zakładu dla użytkownika
 export const updateBet = async (req, res) => {
   try {
-    const { userId, betId } = req.params;
+    const userId = req.user._id;
+    const { betId } = req.params;
     const updateData = req.body;
 
     // Sprawdź, czy ID jest prawidłowym obiektem ObjectId
@@ -148,7 +151,8 @@ export const updateBet = async (req, res) => {
 // Delete - usunięcie zakładu użytkownika
 export const deleteBet = async (req, res) => {
   try {
-    const { userId, betId } = req.params;
+    const userId = req.user._id;
+    const { betId } = req.params;
 
     // Sprawdź, czy ID jest prawidłowym obiektem ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(betId)) {
@@ -171,7 +175,7 @@ export const deleteBet = async (req, res) => {
 // Pobierz wszystkie zakłady użytkownika
 export const getAllUserBets = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user._id;
 
     // Sprawdź, czy ID jest prawidłowym obiektem ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
