@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import Race from "../models/race.model.js";
 import mongoose from "mongoose";
 
 // Create - utworzenie zakładu dla danego użytkownika i wyścigu
@@ -12,6 +13,20 @@ export const createBet = async (req, res) => {
       return res.status(400).json({ message: "Wszystkie pola są wymagane" });
     }
 
+    // Sprawdź czy termin na zakłady nie minął
+    const race = await Race.findById(raceId).exec();
+    if (!race) {
+      return res.status(404).json({ message: "Wyścig nie został znaleziony" });
+    }
+
+    const now = new Date();
+    if (race.betDeadline && new Date(race.betDeadline) < now) {
+      return res.status(400).json({
+        message: "Termin składania zakładów dla tego wyścigu minął",
+        deadline: race.betDeadline,
+        currentTime: now,
+      });
+    }
     // Sprawdź, czy wszystkie wymagane pola driverBets są podane
     const requiredDriverPositions = ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10"];
     for (const position of requiredDriverPositions) {
@@ -109,6 +124,21 @@ export const updateBet = async (req, res) => {
       return res.status(400).json({ message: "Nie można zaktualizować zakończonego zakładu" });
     }
 
+    // Sprawdź czy termin na zakłady nie minął
+    const race = await Race.findById(existingBet.bets[0].race).exec();
+    if (!race) {
+      return res.status(404).json({ message: "Wyścig nie został znaleziony" });
+    }
+
+    const now = new Date();
+    if (race.betDeadline && new Date(race.betDeadline) < now) {
+      return res.status(400).json({
+        message: "Termin składania zakładów dla tego wyścigu minął",
+        deadline: race.betDeadline,
+        currentTime: now,
+      });
+    }
+
     // Przygotuj obiekt z aktualizacjami
     const updates = {};
 
@@ -157,6 +187,28 @@ export const deleteBet = async (req, res) => {
     // Sprawdź, czy ID jest prawidłowym obiektem ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(betId)) {
       return res.status(400).json({ message: "Nieprawidłowy format ID" });
+    }
+
+    // Znajdź zakład przed usunięciem, aby pobrać ID wyścigu
+    const existingBet = await User.findOne({ _id: userId, "bets._id": betId }, { "bets.$": 1 }).exec();
+
+    if (!existingBet || !existingBet.bets || existingBet.bets.length === 0) {
+      return res.status(404).json({ message: "Zakład nie został znaleziony" });
+    }
+
+    // Sprawdź czy termin na zakłady nie minął
+    const race = await Race.findById(existingBet.bets[0].race).exec();
+    if (!race) {
+      return res.status(404).json({ message: "Wyścig powiązany z zakładem nie został znaleziony" });
+    }
+
+    const now = new Date();
+    if (race.betDeadline && new Date(race.betDeadline) < now) {
+      return res.status(400).json({
+        message: "Termin usuwania zakładów dla tego wyścigu minął",
+        deadline: race.betDeadline,
+        currentTime: now,
+      });
     }
 
     // Usuń zakład uzytkownika

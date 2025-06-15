@@ -1,5 +1,6 @@
 import Race from "../models/race.model.js";
 import User from "../models/user.model.js";
+import Config from "../models/config.model.js";
 import mongoose from "mongoose";
 
 // Create (C) - utworzenie nowego wyścigu
@@ -133,6 +134,91 @@ export const updateRace = async (req, res) => {
 
     if (!updatedRace) {
       return res.status(404).json({ message: "Nie znaleziono wyścigu" });
+    }
+
+    // Jeżeli wyścig został zakończony (status = finished), oblicz punkty dla wszystkich zakładów
+    if (updatedRace.status === "finished") {
+      // Pobierz konfigurację punktacji z bazy danych
+      const config = await Config.findOne().exec();
+      if (!config) {
+        return res.status(500).json({ message: "Nie znaleziono konfiguracji punktacji" });
+      }
+
+      // Znajdź wszystkich użytkowników z zakładami dla tego wyścigu
+      const usersWithBets = await User.find({ "bets.race": id }).exec();
+
+      // Dla każdego użytkownika oblicz punkty
+      for (const user of usersWithBets) {
+        // Znajdź zakład dla tego wyścigu
+        const betIndex = user.bets.findIndex((bet) => bet.race.toString() === id);
+        if (betIndex === -1) continue; // Jeśli nie znaleziono zakładu, przejdź do następnego użytkownika
+
+        const bet = user.bets[betIndex];
+        let totalPoints = 0;
+
+        // 1. Oblicz punkty za pozycje kierowców
+        for (let i = 1; i <= 10; i++) {
+          const position = `p${i}`;
+          const predictedDriver = bet.driverBets[position];
+          if (!predictedDriver) continue;
+
+          // Znajdź pozycję tego kierowcy w rzeczywistych wynikach
+          let actualPosition = null;
+          for (let j = 1; j <= 12; j++) {
+            const pos = `p${j}`;
+            if (updatedRace.driverResults[pos] === predictedDriver) {
+              actualPosition = j;
+              break;
+            }
+          }
+
+          // Przyznaj punkty na podstawie różnicy między przewidywaną a rzeczywistą pozycją
+          if (actualPosition !== null) {
+            const difference = Math.abs(i - actualPosition);
+            if (difference === 0) {
+              // Dokładne trafienie
+              totalPoints += config.driverBetPoints.exactMatch;
+            } else if (difference === 1) {
+              // Różnica jednej pozycji
+              totalPoints += config.driverBetPoints.oneOff;
+            } else if (difference === 2) {
+              // Różnica dwóch pozycji
+              totalPoints += config.driverBetPoints.twoOff;
+            }
+          }
+        }
+
+        // 2. Oblicz punkty za zakłady bonusowe
+        // Pole Position
+        if (bet.bonusBets.polePosition === updatedRace.bonusResults.polePosition) {
+          totalPoints += config.bonusBetPoints.polePosition;
+        }
+
+        // Najszybsze okrążenie
+        if (bet.bonusBets.fastestLap === updatedRace.bonusResults.fastestLap) {
+          totalPoints += config.bonusBetPoints.fastestLap;
+        }
+
+        // Kierowca dnia
+        if (bet.bonusBets.driverOfTheDay === updatedRace.bonusResults.driverOfTheDay) {
+          totalPoints += config.bonusBetPoints.driverOfTheDay;
+        }
+
+        // Brak DNF
+        if (bet.bonusBets.noDNFs === updatedRace.bonusResults.noDNFs) {
+          totalPoints += config.bonusBetPoints.noDNFs;
+        }
+
+        // Zaktualizuj status zakładu i przyznane punkty
+        user.bets[betIndex].status = "finished";
+        user.bets[betIndex].awardedPoints = totalPoints;
+
+        // Zaktualizuj sumę punktów użytkownika
+        user.pointsSum = user.bets.reduce((sum, bet) => sum + bet.awardedPoints, 0);
+
+        // Zapisz zmiany
+        await user.save();
+      }
     }
 
     res.status(200).json(updatedRace);
