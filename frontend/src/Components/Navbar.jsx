@@ -1,5 +1,15 @@
 import { AppShell, NavLink } from "@mantine/core";
-import { IconChartBar, IconChevronRight, IconNumber123, IconSmartHome, IconTrophy, IconSettings, IconUsers } from "@tabler/icons-react";
+import {
+  IconChartBar,
+  IconChevronRight,
+  IconNumber123,
+  IconSmartHome,
+  IconTrophy,
+  IconUsers,
+  IconHelmet,
+  IconAdjustments,
+  IconFlag,
+} from "@tabler/icons-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import classes from "./Navbar.module.css";
@@ -83,7 +93,7 @@ const Navbar = ({ opened, toggle }) => {
           <NavLink
             className={classes.link}
             label="Race Management"
-            leftSection={<IconSettings size={22} />}
+            leftSection={<IconFlag size={22} />}
             rightSection={<IconChevronRight size={22} />}
             active={location.pathname === "/admin/races"}
             onClick={() => {
@@ -103,6 +113,36 @@ const Navbar = ({ opened, toggle }) => {
             active={location.pathname === "/admin/users"}
             onClick={() => {
               navigate("/admin/users");
+              if (opened) toggle();
+            }}
+            styles={{
+              label: { fontSize: "18px" },
+            }}
+            variant="filled"
+          />
+          <NavLink
+            className={classes.link}
+            label="Driver Management"
+            leftSection={<IconHelmet size={22} />}
+            rightSection={<IconChevronRight size={22} />}
+            active={location.pathname === "/admin/drivers"}
+            onClick={() => {
+              navigate("/admin/drivers");
+              if (opened) toggle();
+            }}
+            styles={{
+              label: { fontSize: "18px" },
+            }}
+            variant="filled"
+          />
+          <NavLink
+            className={classes.link}
+            label="Config Management"
+            leftSection={<IconAdjustments size={22} />}
+            rightSection={<IconChevronRight size={22} />}
+            active={location.pathname === "/admin/config"}
+            onClick={() => {
+              navigate("/admin/config");
               if (opened) toggle();
             }}
             styles={{

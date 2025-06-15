@@ -13,6 +13,8 @@ import LoginPage from "./Pages/LoginPage";
 import RegisterPage from "./Pages/RegisterPage";
 import RacesAdminPage from "./Pages/Admin/RacesAdminPage";
 import UsersAdminPage from "./Pages/Admin/UsersAdminPage";
+import DriversAdminPage from "./Pages/Admin/DriversAdminPage";
+import ConfigAdminPage from "./Pages/Admin/ConfigAdminPage";
 
 // Komponent chroniący ścieżki dla użytkowników
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -97,6 +99,8 @@ function App() {
           <Routes>
             <Route path="/admin/races" element={<RacesAdminPage />} />
             <Route path="/admin/users" element={<UsersAdminPage />} />
+            <Route path="/admin/drivers" element={<DriversAdminPage />} />
+            <Route path="/admin/config" element={<ConfigAdminPage />} />
             <Route path="*" element={<Navigate to="/admin/races" />} />
           </Routes>
         ) : (

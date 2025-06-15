@@ -114,7 +114,7 @@ export const registerUser = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     // znajdz wszystkich użytkowników
-    const users = await User.find({ role: "user" }).select("-password -registrationToken -tokenExpiryTime -bets").exec();
+    const users = await User.find().select("-password -registrationToken -tokenExpiryTime -bets").exec();
     res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -188,11 +188,18 @@ export const deleteUser = async (req, res) => {
 export const getLeaderboard = async (req, res) => {
   try {
     const leaderboard = await User.aggregate([
+      // Filtruj tylko użytkowników z rolą "user"
+      {
+        $match: {
+          role: "user", // Dodane filtrowanie - tylko użytkownicy z rolą "user"
+        },
+      },
       // Wybierz tylko potrzebne pola
       {
         $project: {
           username: 1,
           pointsSum: 1,
+          role: 1, // Zachowujemy rolę na wszelki wypadek, gdyby była potrzebna na frontend
         },
       },
       // Posortuj malejąco wg punktów
@@ -228,6 +235,7 @@ export const loginUser = async (req, res) => {
       email: user.email,
       username: user.username,
       role: user.role,
+      pointsSum: user.pointsSum,
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error", error: error.message });

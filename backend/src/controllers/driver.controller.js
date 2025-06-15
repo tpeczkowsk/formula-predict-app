@@ -22,9 +22,22 @@ export const createDriver = async (req, res) => {
 };
 
 // Read (R)
+// Read (R)
 export const getAllDrivers = async (req, res) => {
   try {
-    const drivers = await Driver.find().exec();
+    // Sprawdzamy czy w zapytaniu jest parametr isActive
+    const { isActive } = req.query;
+
+    let query = {};
+
+    // Jeśli parametr isActive ma wartość "true", dodajemy warunek do zapytania
+    if (isActive === "true") {
+      query.isActive = true;
+    }
+
+    // Wykonujemy zapytanie z opcjonalnym filtrem
+    const drivers = await Driver.find(query).exec();
+
     res.status(200).json(drivers);
   } catch (error) {
     res.status(500).json({ message: "Error while fetching drivers", error: error.message });
