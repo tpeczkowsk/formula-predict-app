@@ -21,7 +21,7 @@ const LeaderboardPage = () => {
         setLeaderboardData(response.data);
       } catch (err) {
         console.error("Error fetching leaderboard:", err);
-        setError("Nie udało się pobrać tablicy wyników. Spróbuj ponownie później.");
+        setError("Failed to load leaderboard data. Please try again later.");
       } finally {
         setLoading(false);
       }

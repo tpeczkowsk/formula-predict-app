@@ -77,7 +77,7 @@ const UsersAdminPage = () => {
       console.error("Error creating user:", err);
       notifications.show({
         title: "Error",
-        message: err.response?.data?.message || "Failed to create user",
+        message: err.message || "Failed to create user",
         color: "red",
       });
     }
@@ -97,7 +97,7 @@ const UsersAdminPage = () => {
         console.error("Error deleting user:", err);
         notifications.show({
           title: "Error",
-          message: err.response?.data?.message || "Failed to delete user",
+          message: err.message || "Failed to delete user",
           color: "red",
         });
       }

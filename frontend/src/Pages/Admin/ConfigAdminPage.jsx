@@ -53,7 +53,7 @@ const ConfigAdminPage = () => {
       });
     } catch (err) {
       console.error("Error fetching config:", err);
-      setError(err.response?.data?.message || "Failed to load configuration");
+      setError(err.message || "Failed to load configuration");
     } finally {
       setLoading(false);
     }
@@ -85,10 +85,10 @@ const ConfigAdminPage = () => {
       }
     } catch (err) {
       console.error("Error saving config:", err);
-      setError(err.response?.data?.message || "Failed to save configuration");
+      setError(err.message || "Failed to save configuration");
       notifications.show({
         title: "Error",
-        message: "Failed to save configuration",
+        message: err.message || "Failed to save configuration",
         color: "red",
       });
     } finally {
@@ -122,10 +122,10 @@ const ConfigAdminPage = () => {
       });
     } catch (err) {
       console.error("Error resetting config:", err);
-      setError(err.response?.data?.message || "Failed to reset configuration");
+      setError(err.message || "Failed to reset configuration");
       notifications.show({
         title: "Error",
-        message: "Failed to reset configuration",
+        message: err.message || "Failed to reset configuration",
         color: "red",
       });
     } finally {

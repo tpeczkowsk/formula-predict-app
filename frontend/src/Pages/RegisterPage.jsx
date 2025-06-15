@@ -3,6 +3,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { Link, useNavigate } from "react-router-dom";
 import { TextInput, PasswordInput, Button, Paper, Title, Text, Container, Stack, Group, Anchor } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
 
 const RegisterPage = () => {
   const { signup, isRegistering } = useAuthStore();
@@ -36,10 +37,19 @@ const RegisterPage = () => {
         password: values.password,
         registrationToken: values.registrationToken,
       });
-
+      notifications.show({
+        title: "Registration Successful",
+        message: "You have successfully registered. Please log in to continue.",
+        color: "green",
+      });
       navigate("/login", { state: { registered: true } });
     } catch (err) {
-      setError(err.response?.data?.message || "An error occurred during registration. Please try again.");
+      notifications.show({
+        title: "Registration Error",
+        message: err.message || "An error occurred during registration. Please try again.",
+        color: "red",
+      });
+      // setError(err.message || "Error during registration. Please try again.");
     }
   };
 

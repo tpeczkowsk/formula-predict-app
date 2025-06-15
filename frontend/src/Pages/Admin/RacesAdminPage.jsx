@@ -155,11 +155,7 @@ const RacesAdminPage = () => {
       setDrivers(formattedDrivers);
     } catch (err) {
       console.error("Error fetching drivers:", err);
-      notifications.show({
-        title: "Error",
-        message: "Failed to load drivers. Please refresh and try again.",
-        color: "red",
-      });
+      setError("Failed to load drivers. Please try again.");
     } finally {
       setLoadingDrivers(false);
     }
@@ -193,7 +189,7 @@ const RacesAdminPage = () => {
       console.error("Error creating race:", err);
       notifications.show({
         title: "Error",
-        message: err.response?.data?.message || "Failed to create race",
+        message: err.message || "Failed to create race",
         color: "red",
       });
     }
@@ -216,7 +212,7 @@ const RacesAdminPage = () => {
       console.error("Error updating race:", err);
       notifications.show({
         title: "Error",
-        message: err.response?.data?.message || "Failed to update race",
+        message: err.message || "Failed to update race",
         color: "red",
       });
     }
@@ -236,7 +232,7 @@ const RacesAdminPage = () => {
         console.error("Error deleting race:", err);
         notifications.show({
           title: "Error",
-          message: err.response?.data?.message || "Failed to delete race",
+          message: err.message || "Failed to delete race",
           color: "red",
         });
       }

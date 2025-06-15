@@ -6,10 +6,10 @@ import mongoose from "mongoose";
 // Create (C) - utworzenie nowego wyścigu
 export const createRace = async (req, res) => {
   try {
-    const { name, date, betDeadline, season, isSprint } = req.body;
+    const { name, date, betDeadline, season, isSprint, countryName, flagFileName } = req.body;
 
     // Sprawdź, czy wszystkie wymagane pola są podane
-    if (!name || !date || !betDeadline || !season) {
+    if (!name || !date || !betDeadline || !season || !countryName || !flagFileName) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -23,6 +23,8 @@ export const createRace = async (req, res) => {
       date,
       betDeadline,
       season,
+      countryName,
+      flagFileName,
       isSprint: isSprint || false,
       status: "waiting",
     });
@@ -76,6 +78,8 @@ export const updateRace = async (req, res) => {
     if (updateData.season !== undefined) updates.season = updateData.season;
     if (updateData.isSprint !== undefined) updates.isSprint = updateData.isSprint;
     if (updateData.status !== undefined) updates.status = updateData.status;
+    if (updateData.countryName !== undefined) updates.countryName = updateData.countryName;
+    if (updateData.flagFileName !== undefined) updates.flagFileName = updateData.flagFileName;
 
     // Wyniki kierowców
     if (updateData.driverResults) {

@@ -30,7 +30,7 @@ const LoginPage = () => {
       await login(values);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Error logging in. Please try again.");
+      setError(err.message || "Error logging in. Please try again.");
     }
   };
 

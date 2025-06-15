@@ -42,7 +42,7 @@ const RacesPage = () => {
         setNextRace(upcoming || null);
       } catch (err) {
         console.error("Error fetching races:", err);
-        setError("Nie udało się pobrać danych wyścigów. Spróbuj odświeżyć stronę.");
+        setError("Failed to load races data. Please try again later.");
       } finally {
         setLoading(false);
       }

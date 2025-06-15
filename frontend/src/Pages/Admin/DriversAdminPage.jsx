@@ -90,7 +90,7 @@ const DriversAdminPage = () => {
       console.error("Error creating driver:", err);
       notifications.show({
         title: "Error",
-        message: err.response?.data?.message || "Failed to create driver",
+        message: err.message || "Failed to create driver",
         color: "red",
       });
     }
@@ -120,7 +120,7 @@ const DriversAdminPage = () => {
       console.error("Error updating driver:", err);
       notifications.show({
         title: "Error",
-        message: err.response?.data?.message || "Failed to update driver",
+        message: err.message || "Failed to update driver",
         color: "red",
       });
     }
@@ -145,7 +145,7 @@ const DriversAdminPage = () => {
       console.error("Error deleting driver:", err);
       notifications.show({
         title: "Error",
-        message: err.response?.data?.message || "Failed to delete driver",
+        message: err.message || "Failed to delete driver",
         color: "red",
       });
     }

@@ -131,11 +131,7 @@ const BetsPage = () => {
       console.error("Error fetching available races:", err);
       // Ustaw pustą tablicę w przypadku błędu
       setRaces([]);
-      notifications.show({
-        title: "Error",
-        message: "Failed to load available races",
-        color: "red",
-      });
+      setError("Failed to load available races. Please try again later.");
     }
   };
 
@@ -159,11 +155,7 @@ const BetsPage = () => {
       setDrivers(formattedDrivers);
     } catch (err) {
       console.error("Error fetching drivers:", err);
-      notifications.show({
-        title: "Error",
-        message: "Failed to load drivers. Please refresh and try again.",
-        color: "red",
-      });
+      setError("Failed to load drivers. Please try again later.");
     } finally {
       setLoadingDrivers(false);
     }
@@ -186,7 +178,7 @@ const BetsPage = () => {
       console.error("Error deleting bet:", err);
       notifications.show({
         title: "Error",
-        message: err.response?.data?.message || "Failed to delete bet",
+        message: err.message || "Failed to delete bet",
         color: "red",
       });
     } finally {
@@ -214,7 +206,7 @@ const BetsPage = () => {
       console.error("Error updating bet:", err);
       notifications.show({
         title: "Error",
-        message: err.response?.data?.message || "Failed to update bet",
+        message: err.message || "Failed to update bet",
         color: "red",
       });
     } finally {
@@ -265,7 +257,7 @@ const BetsPage = () => {
       console.error("Error creating bet:", err);
       notifications.show({
         title: "Error",
-        message: err.response?.data?.message || "Failed to create bet",
+        message: err.message || "Failed to create bet",
         color: "red",
       });
     } finally {
