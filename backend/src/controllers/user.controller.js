@@ -114,7 +114,7 @@ export const registerUser = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     // znajdz wszystkich użytkowników
-    const users = await User.find().select("-password -registrationToken -tokenExpiryTime -bets").exec();
+    const users = await User.find({ role: "user" }).select("-password -registrationToken -tokenExpiryTime -bets").exec();
     res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
