@@ -19,6 +19,7 @@ import {
   Switch,
   Grid,
   Box,
+  Flex,
 } from "@mantine/core";
 import { IconEdit, IconTrash, IconAlertCircle, IconEye, IconPlus, IconTrophy } from "@tabler/icons-react";
 import { axiosInstance } from "../lib/axios";
@@ -30,6 +31,7 @@ const BetsPage = () => {
   const [races, setRaces] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingDrivers, setLoadingDrivers] = useState(true);
   const [error, setError] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [betToDelete, setBetToDelete] = useState(null);
@@ -137,22 +139,19 @@ const BetsPage = () => {
     }
   };
 
-  // Popraw funkcję fetchDrivers na poniższą implementację:
-
   const fetchDrivers = async () => {
+    setLoadingDrivers(true);
     try {
-      // Endpoint zwraca listę aktywnych kierowców
-      const response = await axiosInstance.get("/drivers?isActive=true");
+      const response = await axiosInstance.get("/drivers");
       console.log("Drivers data from API:", response.data);
 
-      // Przetwarzamy dane w taki sam sposób jak w RacesAdminPage
+      // Teraz używamy fullName zarówno dla value jak i label
       const formattedDrivers = response.data.map((driver) => {
         if (typeof driver === "object" && driver !== null) {
           const fullName = driver.fullname || driver.name || `Driver ID: ${driver._id}`;
           return {
-            value: fullName, // Używamy fullname jako wartości
+            value: fullName, // Używamy fullName jako wartości
             label: fullName, // I również jako etykiety
-            group: driver.teamName, // Zachowujemy grupowanie po zespołach
           };
         }
         return { value: String(driver), label: String(driver) };
@@ -162,13 +161,13 @@ const BetsPage = () => {
       setDrivers(formattedDrivers);
     } catch (err) {
       console.error("Error fetching drivers:", err);
-      // Ustaw pustą tablicę w przypadku błędu
-      setDrivers([]);
       notifications.show({
         title: "Error",
-        message: "Failed to load drivers list",
+        message: "Failed to load drivers. Please refresh and try again.",
         color: "red",
       });
+    } finally {
+      setLoadingDrivers(false);
     }
   };
 
@@ -229,7 +228,33 @@ const BetsPage = () => {
     try {
       setLoadingAction(true);
       // Endpoint tworzy nowy zakład
-      const response = await axiosInstance.post("/bets", values);
+      // Znajdź dane wybranego wyścigu na podstawie ID
+      const selectedRace = races.find((race) => race._id === values.race);
+
+      if (!selectedRace) {
+        notifications.show({
+          title: "Error",
+          message: "Selected race details not found",
+          color: "red",
+        });
+        return;
+      }
+
+      // Dodaj raceName i season do danych
+      const betData = {
+        ...values,
+        raceId: values.race, // Zmienione z race na raceId zgodnie z kontrolerem
+        raceName: selectedRace.countryName || selectedRace.name || "Unnamed Race",
+        season: selectedRace.season || new Date().getFullYear(),
+      };
+
+      // Usuń właściwość race aby uniknąć duplikatu (zastąpiliśmy ją przez raceId)
+      delete betData.race;
+
+      console.log("Sending bet data:", betData);
+
+      // Endpoint tworzy nowy zakład
+      const response = await axiosInstance.post("/bets", betData);
       setBets([...bets, response.data]);
       notifications.show({
         title: "Success",
@@ -483,80 +508,92 @@ const BetsPage = () => {
         </Stack>
       </Modal>
 
-      {/* Modal edycji zakładu (tylko dla pending) */}
       <Modal opened={editModalOpen} onClose={() => setEditModalOpen(false)} title={`Edit bet for ${currentBet?.raceName}`} size="xl">
         <form onSubmit={editForm.onSubmit(handleEditBet)}>
           <Stack spacing="md">
-            <div>
-              <Text fw={700} mb="xs">
-                Driver Positions
-              </Text>
-              <Grid>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((position) => (
-                  <Grid.Col key={position} span={6} md={4} lg={2.4}>
-                    <Select
-                      label={`P${position}`}
-                      placeholder="Select driver"
-                      data={drivers}
-                      clearable
-                      searchable
-                      required={position <= 3}
-                      {...editForm.getInputProps(`driverBets.p${position}`)}
-                      mb="md"
-                    />
-                  </Grid.Col>
-                ))}
-              </Grid>
-            </div>
+            {loadingDrivers ? (
+              <Flex justify="center" my="xl">
+                <Loader />
+                <Text ml="md">Loading drivers...</Text>
+              </Flex>
+            ) : (
+              <>
+                <div>
+                  <Text fw={700} mb="xs">
+                    Driver Positions
+                  </Text>
+                  <Grid>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((position) => (
+                      <Grid.Col key={position} span={6} md={4} lg={2.4}>
+                        <Select
+                          label={`P${position}`}
+                          placeholder="Select driver"
+                          data={drivers}
+                          clearable
+                          searchable
+                          required={position <= 3}
+                          {...editForm.getInputProps(`driverBets.p${position}`)}
+                          mb="md"
+                          nothingfound="No drivers found"
+                        />
+                      </Grid.Col>
+                    ))}
+                  </Grid>
+                </div>
 
-            <Divider />
+                <Divider />
 
-            <div>
-              <Text fw={700} mb="xs">
-                Bonus Predictions
-              </Text>
-              <Grid>
-                <Grid.Col xs={12} sm={6} md={4}>
-                  <Select
-                    label="Pole Position"
-                    placeholder="Select driver"
-                    data={drivers}
-                    clearable
-                    searchable
-                    {...editForm.getInputProps("bonusBets.polePosition")}
-                  />
-                </Grid.Col>
-                <Grid.Col xs={12} sm={6} md={4}>
-                  <Select
-                    label="Fastest Lap"
-                    placeholder="Select driver"
-                    data={drivers}
-                    clearable
-                    searchable
-                    {...editForm.getInputProps("bonusBets.fastestLap")}
-                  />
-                </Grid.Col>
-                <Grid.Col xs={12} sm={6} md={4}>
-                  <Select
-                    label="Driver of The Day"
-                    placeholder="Select driver"
-                    data={drivers}
-                    clearable
-                    searchable
-                    {...editForm.getInputProps("bonusBets.driverOfTheDay")}
-                  />
-                </Grid.Col>
-                <Grid.Col xs={12}>
-                  <Switch label="No DNFs in the race" {...editForm.getInputProps("bonusBets.noDNFs", { type: "checkbox" })} mt="lg" />
-                </Grid.Col>
-              </Grid>
-            </div>
+                <div>
+                  <Text fw={700} mb="xs">
+                    Bonus Predictions
+                  </Text>
+                  <Grid>
+                    <Grid.Col xs={12} sm={6} md={4}>
+                      <Select
+                        label="Pole Position"
+                        placeholder="Select driver"
+                        data={drivers}
+                        clearable
+                        searchable
+                        {...editForm.getInputProps("bonusBets.polePosition")}
+                        nothingfound="No drivers found"
+                      />
+                    </Grid.Col>
+                    <Grid.Col xs={12} sm={6} md={4}>
+                      <Select
+                        label="Fastest Lap"
+                        placeholder="Select driver"
+                        data={drivers}
+                        clearable
+                        searchable
+                        {...editForm.getInputProps("bonusBets.fastestLap")}
+                        nothingfound="No drivers found"
+                      />
+                    </Grid.Col>
+                    <Grid.Col xs={12} sm={6} md={4}>
+                      <Select
+                        label="Driver of The Day"
+                        placeholder="Select driver"
+                        data={drivers}
+                        clearable
+                        searchable
+                        {...editForm.getInputProps("bonusBets.driverOfTheDay")}
+                        nothingfound="No drivers found"
+                      />
+                    </Grid.Col>
+                    <Grid.Col xs={12}>
+                      <Switch label="No DNFs in the race" {...editForm.getInputProps("bonusBets.noDNFs", { type: "checkbox" })} mt="lg" />
+                    </Grid.Col>
+                  </Grid>
+                </div>
+              </>
+            )}
 
             <Group position="right" mt="md">
               <Button variant="outline" onClick={() => setEditModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" loading={loadingAction}>
+              <Button type="submit" loading={loadingAction} disabled={loadingDrivers}>
                 Save Changes
               </Button>
             </Group>
@@ -564,7 +601,7 @@ const BetsPage = () => {
         </form>
       </Modal>
 
-      {/* Modal tworzenia nowego zakładu */}
+      {/* Modal tworzenia nowego zakładu z obsługą ładowania kierowców */}
       <Modal opened={createModalOpen} onClose={() => setCreateModalOpen(false)} title="Create New Bet" size="xl">
         <form onSubmit={createForm.onSubmit(handleCreateBet)}>
           <Stack spacing="md">
@@ -575,80 +612,93 @@ const BetsPage = () => {
                 Array.isArray(races)
                   ? races.map((race) => ({
                       value: race._id,
-                      label: race.countryName || race.name,
+                      label: race.countryName || race.name || "Unnamed Race",
                     }))
                   : []
               }
               required
               searchable
+              nothingfound="No races available"
               {...createForm.getInputProps("race")}
             />
 
-            <div>
-              <Text fw={700} mb="xs">
-                Driver Positions
-              </Text>
-              <Grid>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((position) => (
-                  <Grid.Col key={position} span={6} md={4} lg={2.4}>
-                    <Select
-                      label={`P${position}`}
-                      placeholder="Select driver"
-                      data={drivers}
-                      clearable
-                      searchable
-                      required={position <= 3}
-                      {...createForm.getInputProps(`driverBets.p${position}`)}
-                      mb="md"
-                    />
-                  </Grid.Col>
-                ))}
-              </Grid>
-            </div>
+            {loadingDrivers ? (
+              <Flex justify="center" my="xl">
+                <Loader />
+                <Text ml="md">Loading drivers...</Text>
+              </Flex>
+            ) : (
+              <>
+                <div>
+                  <Text fw={700} mb="xs">
+                    Driver Positions
+                  </Text>
+                  <Grid>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((position) => (
+                      <Grid.Col key={position} span={6} md={4} lg={2.4}>
+                        <Select
+                          label={`P${position}`}
+                          placeholder="Select driver"
+                          data={drivers}
+                          clearable
+                          searchable
+                          required={position <= 3}
+                          {...createForm.getInputProps(`driverBets.p${position}`)}
+                          mb="md"
+                          nothingfound="No drivers found"
+                        />
+                      </Grid.Col>
+                    ))}
+                  </Grid>
+                </div>
 
-            <Divider />
+                <Divider />
 
-            <div>
-              <Text fw={700} mb="xs">
-                Bonus Predictions
-              </Text>
-              <Grid>
-                <Grid.Col xs={12} sm={6} md={4}>
-                  <Select
-                    label="Pole Position"
-                    placeholder="Select driver"
-                    data={drivers}
-                    clearable
-                    searchable
-                    {...createForm.getInputProps("bonusBets.polePosition")}
-                  />
-                </Grid.Col>
-                <Grid.Col xs={12} sm={6} md={4}>
-                  <Select
-                    label="Fastest Lap"
-                    placeholder="Select driver"
-                    data={drivers}
-                    clearable
-                    searchable
-                    {...createForm.getInputProps("bonusBets.fastestLap")}
-                  />
-                </Grid.Col>
-                <Grid.Col xs={12} sm={6} md={4}>
-                  <Select
-                    label="Driver of The Day"
-                    placeholder="Select driver"
-                    data={drivers}
-                    clearable
-                    searchable
-                    {...createForm.getInputProps("bonusBets.driverOfTheDay")}
-                  />
-                </Grid.Col>
-                <Grid.Col xs={12}>
-                  <Switch label="No DNFs in the race" {...createForm.getInputProps("bonusBets.noDNFs", { type: "checkbox" })} mt="lg" />
-                </Grid.Col>
-              </Grid>
-            </div>
-
+                <div>
+                  <Text fw={700} mb="xs">
+                    Bonus Predictions
+                  </Text>
+                  <Grid>
+                    <Grid.Col xs={12} sm={6} md={4}>
+                      <Select
+                        label="Pole Position"
+                        placeholder="Select driver"
+                        data={drivers}
+                        clearable
+                        searchable
+                        {...createForm.getInputProps("bonusBets.polePosition")}
+                        nothingfound="No drivers found"
+                      />
+                    </Grid.Col>
+                    <Grid.Col xs={12} sm={6} md={4}>
+                      <Select
+                        label="Fastest Lap"
+                        placeholder="Select driver"
+                        data={drivers}
+                        clearable
+                        searchable
+                        {...createForm.getInputProps("bonusBets.fastestLap")}
+                        nothingfound="No drivers found"
+                      />
+                    </Grid.Col>
+                    <Grid.Col xs={12} sm={6} md={4}>
+                      <Select
+                        label="Driver of The Day"
+                        placeholder="Select driver"
+                        data={drivers}
+                        clearable
+                        searchable
+                        {...createForm.getInputProps("bonusBets.driverOfTheDay")}
+                        nothingfound="No drivers found"
+                      />
+                    </Grid.Col>
+                    <Grid.Col xs={12}>
+                      <Switch label="No DNFs in the race" {...createForm.getInputProps("bonusBets.noDNFs", { type: "checkbox" })} mt="lg" />
+                    </Grid.Col>
+                  </Grid>
+                </div>
+              </>
+            )}
             <Group position="right" mt="md">
               <Button variant="outline" onClick={() => setCreateModalOpen(false)}>
                 Cancel
