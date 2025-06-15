@@ -341,20 +341,15 @@ const BetsPage = () => {
 
   return (
     <Container size="lg" py="md">
-      <Group position="apart" mb="md">
-        <Title order={2}>Bets</Title>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          onClick={() => {
-            setCreateModalOpen(true);
-            console.log(races);
-            console.log(drivers);
-          }}
-          disabled={races.length === 0}
-        >
+      <Title order={2} mb="md">
+        Bets
+      </Title>
+
+      <Flex justify="flex-end" mb="md">
+        <Button leftSection={<IconPlus size={20} />} disabled={races.length === 0} onClick={() => setCreateModalOpen(true)}>
           Create New Bet
         </Button>
-      </Group>
+      </Flex>
 
       <Paper withBorder shadow="sm" p="md" radius="md">
         <Table striped highlightOnHover>

@@ -318,7 +318,7 @@ const RacesAdminPage = () => {
 
   return (
     <Container size="xl">
-      <Title order={2} mb="md">
+      <Title order={2} mb="md" mt="md">
         Race Management
       </Title>
 
