@@ -103,6 +103,8 @@ export const registerUser = async (req, res) => {
       userId: user._id,
       username: user.username,
       email: user.email,
+      role: user.role,
+      pointsSum: user.pointsSum,
     });
   } catch (error) {
     console.error("Error registering user:", error);
