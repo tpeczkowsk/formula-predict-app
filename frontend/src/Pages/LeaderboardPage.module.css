@@ -1,13 +1,13 @@
 .currentUserRow {
-  background-color: var(--mantine-color-gray-1);
+  background-color: var(--mantine-color-gray-1) !important;
   font-weight: 500;
 }
 
 .currentUserText {
-  font-weight: 700;
+  font-weight: 700 !important;
 }
 
 /* Styl dla trybu ciemnego */
 [data-mantine-color-scheme="dark"] .currentUserRow {
-  background-color: var(--mantine-color-dark-6);
+  background-color: var(--mantine-color-dark-4) !important;
 }

@@ -8,7 +8,7 @@ export const createConfig = async (req, res) => {
     // Sprawdź, czy nie ma już konfiguracji (powinien być tylko jeden rekord)
     const existingConfig = await Config.findOne().exec();
     if (existingConfig) {
-      return res.status(400).json({ message: "Konfiguracja już istnieje. Użyj metody UPDATE do modyfikacji." });
+      return res.status(400).json({ message: "Config already exists. Use UPDATE method" });
     }
 
     // Utwórz nową konfigurację
@@ -19,7 +19,7 @@ export const createConfig = async (req, res) => {
 
     res.status(201).json(newConfig);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas tworzenia konfiguracji", error: error.message });
+    res.status(500).json({ message: "Error while creating config", error: error.message });
   }
 };
 
@@ -30,12 +30,12 @@ export const getConfig = async (req, res) => {
     const config = await Config.findOne().exec();
 
     if (!config) {
-      return res.status(404).json({ message: "Nie znaleziono konfiguracji. Utwórz ją najpierw." });
+      return res.status(404).json({ message: "Config not found" });
     }
 
     res.status(200).json(config);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas pobierania konfiguracji", error: error.message });
+    res.status(500).json({ message: "Error while getting config", error: error.message });
   }
 };
 
@@ -81,12 +81,12 @@ export const updateConfig = async (req, res) => {
     const updatedConfig = await Config.findByIdAndUpdate(configId, { $set: updates }, { new: true, runValidators: true }).exec();
 
     if (!updatedConfig) {
-      return res.status(404).json({ message: "Nie znaleziono konfiguracji o podanym ID" });
+      return res.status(404).json({ message: "Config not found" });
     }
 
     res.status(200).json(updatedConfig);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas aktualizacji konfiguracji", error: error.message });
+    res.status(500).json({ message: "Error while updating config", error: error.message });
   }
 };
 
@@ -99,12 +99,12 @@ export const deleteConfig = async (req, res) => {
     const deletedConfig = await Config.findByIdAndDelete(configId).exec();
 
     if (!deletedConfig) {
-      return res.status(404).json({ message: "Nie znaleziono konfiguracji o podanym ID" });
+      return res.status(404).json({ message: "Config not found" });
     }
 
-    res.status(200).json({ message: "Konfiguracja została pomyślnie usunięta", config: deletedConfig });
+    res.status(200).json({ message: "Config deleted successfully", config: deletedConfig });
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas usuwania konfiguracji", error: error.message });
+    res.status(500).json({ message: "Error while deleting config", error: error.message });
   }
 };
 
@@ -122,8 +122,8 @@ export const resetConfig = async (req, res) => {
     // Utwórz nową konfigurację z domyślnymi wartościami
     const defaultConfig = await Config.create({});
 
-    res.status(200).json({ message: "Przywrócono domyślną konfigurację", config: defaultConfig });
+    res.status(200).json({ message: "Config reset successfully", config: defaultConfig });
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas resetowania konfiguracji", error: error.message });
+    res.status(500).json({ message: "Error while resetting config", error: error.message });
   }
 };

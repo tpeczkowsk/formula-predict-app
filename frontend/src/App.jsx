@@ -2,12 +2,12 @@ import { AppShell } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import Header from "./Components/Header";
 import Navbar from "./Components/Navbar";
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "./Pages/HomePage";
 import BetsPage from "./Pages/BetsPage";
 import LeaderboardPage from "./Pages/LeaderboardPage";
 import RacesPage from "./Pages/RacesPage";
-import { useEffect, useRef } from "react"; // dodajemy useRef
+import { useEffect } from "react"; // dodajemy useRef
 import { useAuthStore } from "./store/useAuthStore";
 import LoginPage from "./Pages/LoginPage";
 import RegisterPage from "./Pages/RegisterPage";
@@ -17,44 +17,6 @@ import DriversAdminPage from "./Pages/Admin/DriversAdminPage";
 import ConfigAdminPage from "./Pages/Admin/ConfigAdminPage";
 
 // Komponent chroniący ścieżki dla użytkowników
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { authUser, isCheckingAuth } = useAuthStore();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const navigatedRef = useRef(false);
-
-  useEffect(() => {
-    // Użyj referencji, aby zapobiec wielokrotnemu przekierowaniu
-    if (navigatedRef.current) return;
-
-    if (!isCheckingAuth && !authUser) {
-      navigatedRef.current = true;
-      // Zapisz oryginalną ścieżkę, aby wrócić do niej po zalogowaniu
-      navigate("/login", { state: { from: location.pathname } });
-    } else if (!isCheckingAuth && authUser && allowedRoles && !allowedRoles.includes(authUser.role)) {
-      navigatedRef.current = true;
-      // Użytkownik jest zalogowany, ale nie ma odpowiedniej roli
-      if (authUser.role === "admin") {
-        navigate("/admin/races");
-      } else {
-        navigate("/bets");
-      }
-    }
-  }, [authUser, isCheckingAuth, navigate, location, allowedRoles]);
-
-  // Pokazuj ładowanie podczas sprawdzania autentykacji
-  if (isCheckingAuth) {
-    return <div>Loading...</div>;
-  }
-
-  // Jeśli użytkownik jest zalogowany i ma odpowiednią rolę, pokaż chronioną zawartość
-  if (authUser && (!allowedRoles || allowedRoles.includes(authUser.role))) {
-    return children;
-  }
-
-  // To nie powinno się wykonać dzięki useEffect, ale jako zabezpieczenie
-  return null;
-};
 
 function App() {
   const [opened, { toggle }] = useDisclosure();

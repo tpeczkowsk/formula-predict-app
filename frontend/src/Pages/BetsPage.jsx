@@ -143,7 +143,6 @@ const BetsPage = () => {
     setLoadingDrivers(true);
     try {
       const response = await axiosInstance.get("/drivers");
-      console.log("Drivers data from API:", response.data);
 
       // Teraz używamy fullName zarówno dla value jak i label
       const formattedDrivers = response.data.map((driver) => {
@@ -157,7 +156,6 @@ const BetsPage = () => {
         return { value: String(driver), label: String(driver) };
       });
 
-      console.log("Formatted drivers for Select:", formattedDrivers);
       setDrivers(formattedDrivers);
     } catch (err) {
       console.error("Error fetching drivers:", err);

@@ -10,12 +10,12 @@ export const createRace = async (req, res) => {
 
     // Sprawdź, czy wszystkie wymagane pola są podane
     if (!name || !date || !betDeadline || !season) {
-      return res.status(400).json({ message: "Wszystkie wymagane pola muszą być wypełnione" });
+      return res.status(400).json({ message: "All fields are required" });
     }
 
     // Sprawdź, czy data deadline'u jest przed datą wyścigu
     if (new Date(betDeadline) > new Date(date)) {
-      return res.status(400).json({ message: "Termin zamknięcia zakładów musi być przed datą wyścigu" });
+      return res.status(400).json({ message: "Deadline must be before race date" });
     }
 
     const newRace = await Race.create({
@@ -29,7 +29,7 @@ export const createRace = async (req, res) => {
 
     res.status(201).json(newRace);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas tworzenia wyścigu", error: error.message });
+    res.status(500).json({ message: "Error while creating race", error: error.message });
   }
 };
 
@@ -39,7 +39,7 @@ export const getAllRaces = async (req, res) => {
     const races = await Race.find().sort({ date: 1 }).exec();
     res.status(200).json(races);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas pobierania wyścigów", error: error.message });
+    res.status(500).json({ message: "Error while getting races", error: error.message });
   }
 };
 
@@ -51,12 +51,12 @@ export const getRaceById = async (req, res) => {
     const race = await Race.findById(id).exec();
 
     if (!race) {
-      return res.status(404).json({ message: "Nie znaleziono wyścigu" });
+      return res.status(404).json({ message: "Race not found" });
     }
 
     res.status(200).json(race);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas pobierania wyścigu", error: error.message });
+    res.status(500).json({ message: "Error while getting race", error: error.message });
   }
 };
 
@@ -108,7 +108,7 @@ export const updateRace = async (req, res) => {
     if (updateData.status === "finished") {
       const race = await Race.findById(id).exec();
       if (!race) {
-        return res.status(404).json({ message: "Nie znaleziono wyścigu" });
+        return res.status(404).json({ message: "Race not found" });
       }
 
       // Sprawdź wyniki główne dla top 10
@@ -116,7 +116,7 @@ export const updateRace = async (req, res) => {
       for (let i = 1; i <= 10; i++) {
         const pos = `p${i}`;
         if (!driverResults[pos]) {
-          return res.status(400).json({ message: `Brakuje kierowcy na pozycji ${pos}` });
+          return res.status(400).json({ message: `Missing driver for pos ${pos}` });
         }
       }
 
@@ -125,7 +125,7 @@ export const updateRace = async (req, res) => {
       const requiredBonusFields = ["polePosition", "fastestLap", "driverOfTheDay", "noDNFs"];
       for (const field of requiredBonusFields) {
         if (bonusResults[field] === undefined) {
-          return res.status(400).json({ message: `Brakuje wyniku bonusowego: ${field}` });
+          return res.status(400).json({ message: `Missing bonus field: ${field}` });
         }
       }
     }
@@ -133,7 +133,7 @@ export const updateRace = async (req, res) => {
     const updatedRace = await Race.findByIdAndUpdate(id, { $set: updates }, { new: true, runValidators: true }).exec();
 
     if (!updatedRace) {
-      return res.status(404).json({ message: "Nie znaleziono wyścigu" });
+      return res.status(404).json({ message: "Race not found" });
     }
 
     // Jeżeli wyścig został zakończony (status = finished), oblicz punkty dla wszystkich zakładów
@@ -141,7 +141,7 @@ export const updateRace = async (req, res) => {
       // Pobierz konfigurację punktacji z bazy danych
       const config = await Config.findOne().exec();
       if (!config) {
-        return res.status(500).json({ message: "Nie znaleziono konfiguracji punktacji" });
+        return res.status(500).json({ message: "Config not found" });
       }
 
       // Znajdź wszystkich użytkowników z zakładami dla tego wyścigu
@@ -223,7 +223,7 @@ export const updateRace = async (req, res) => {
 
     res.status(200).json(updatedRace);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas aktualizacji wyścigu", error: error.message });
+    res.status(500).json({ message: "Error while updating race", error: error.message });
   }
 };
 
@@ -235,12 +235,12 @@ export const deleteRace = async (req, res) => {
     const deletedRace = await Race.findByIdAndDelete(id).exec();
 
     if (!deletedRace) {
-      return res.status(404).json({ message: "Nie znaleziono wyścigu" });
+      return res.status(404).json({ message: "Race not found" });
     }
 
-    res.status(200).json({ message: "Wyścig został pomyślnie usunięty", race: deletedRace });
+    res.status(200).json({ message: "Race deleted successfully", race: deletedRace });
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas usuwania wyścigu", error: error.message });
+    res.status(500).json({ message: "Error while deleting race", error: error.message });
   }
 };
 
@@ -259,7 +259,7 @@ export const getUpcomingRaces = async (req, res) => {
 
     res.status(200).json(races);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas pobierania nadchodzących wyścigów", error: error.message });
+    res.status(500).json({ message: "Error while getting upcoming races", error: error.message });
   }
 };
 
@@ -274,7 +274,7 @@ export const getRacesBySeason = async (req, res) => {
 
     res.status(200).json(races);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas pobierania wyścigów z danego sezonu", error: error.message });
+    res.status(500).json({ message: "Error while getting race for season", error: error.message });
   }
 };
 
@@ -285,13 +285,13 @@ export const getRaceLeaderboard = async (req, res) => {
 
     // Sprawdź czy ID jest prawidłowym ObjectId
     if (!mongoose.Types.ObjectId.isValid(raceId)) {
-      return res.status(400).json({ message: "Nieprawidłowy format ID wyścigu" });
+      return res.status(400).json({ message: "Invalid race ID" });
     }
 
     // Sprawdź czy wyścig istnieje
     const race = await Race.findById(raceId).exec();
     if (!race) {
-      return res.status(404).json({ message: "Nie znaleziono wyścigu" });
+      return res.status(404).json({ message: "Race not found" });
     }
 
     // Konwertuj raceId na ObjectId przed użyciem w agregacji
@@ -321,7 +321,7 @@ export const getRaceLeaderboard = async (req, res) => {
 
     res.status(200).json(leaderboard);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas pobierania tablicy liderów wyścigu", error: error.message });
+    res.status(500).json({ message: "Error while getting race leaderboards", error: error.message });
   }
 };
 
@@ -332,13 +332,13 @@ export const getUserRaceDashboard = async (req, res) => {
 
     // Sprawdź czy ID są prawidłowymi ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(raceId)) {
-      return res.status(400).json({ message: "Nieprawidłowy format ID" });
+      return res.status(400).json({ message: "Invalid ID" });
     }
 
     // Pobierz dane wyścigu
     const race = await Race.findById(raceId).exec();
     if (!race) {
-      return res.status(404).json({ message: "Nie znaleziono wyścigu" });
+      return res.status(404).json({ message: "Race not found" });
     }
 
     // Pobierz zakład użytkownika dla tego wyścigu (jeśli istnieje)
@@ -356,6 +356,6 @@ export const getUserRaceDashboard = async (req, res) => {
 
     res.status(200).json(dashboard);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas pobierania danych dashboardu", error: error.message });
+    res.status(500).json({ message: "Error while getting race dashboard", error: error.message });
   }
 };

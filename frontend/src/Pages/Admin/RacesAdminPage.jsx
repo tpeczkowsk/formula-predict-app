@@ -140,7 +140,6 @@ const RacesAdminPage = () => {
     setLoadingDrivers(true);
     try {
       const response = await axiosInstance.get("/drivers");
-      console.log("Drivers data from API:", response.data);
 
       // Teraz używamy fullName zarówno dla value jak i label
       const formattedDrivers = response.data.map((driver) => {
@@ -153,8 +152,6 @@ const RacesAdminPage = () => {
         }
         return { value: String(driver), label: String(driver) };
       });
-
-      console.log("Formatted drivers for Select:", formattedDrivers);
       setDrivers(formattedDrivers);
     } catch (err) {
       console.error("Error fetching drivers:", err);
@@ -301,20 +298,6 @@ const RacesAdminPage = () => {
     // Race can be edited if it's not finished or if no bets are placed yet
     return race.status !== "finished";
   };
-
-  const renderDriverSelect = (position, required = false) => (
-    <Select
-      label={`Position ${position}`}
-      placeholder={loadingDrivers ? "Loading drivers..." : "Select driver"}
-      data={drivers}
-      required={required}
-      {...editForm.getInputProps(`driverResults.p${position}`)}
-      disabled={loadingDrivers}
-      rightSection={loadingDrivers ? <Loader size="xs" /> : null}
-      searchable
-      nothingfound="No drivers found"
-    />
-  );
 
   return (
     <Container size="xl">

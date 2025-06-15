@@ -10,19 +10,19 @@ export const createBet = async (req, res) => {
 
     // Sprawdź, czy wszystkie wymagane pola są podane
     if (!userId || !raceId || !raceName || !season || !driverBets || !bonusBets) {
-      return res.status(400).json({ message: "Wszystkie pola są wymagane" });
+      return res.status(400).json({ message: "All fields are required" });
     }
 
     // Sprawdź czy termin na zakłady nie minął
     const race = await Race.findById(raceId).exec();
     if (!race) {
-      return res.status(404).json({ message: "Wyścig nie został znaleziony" });
+      return res.status(404).json({ message: "Race not found" });
     }
 
     const now = new Date();
     if (race.betDeadline && new Date(race.betDeadline) < now) {
       return res.status(400).json({
-        message: "Termin składania zakładów dla tego wyścigu minął",
+        message: "Bets for this race have been closed",
         deadline: race.betDeadline,
         currentTime: now,
       });
@@ -31,7 +31,7 @@ export const createBet = async (req, res) => {
     const requiredDriverPositions = ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10"];
     for (const position of requiredDriverPositions) {
       if (!driverBets[position]) {
-        return res.status(400).json({ message: `Kierowca na pozycji ${position} jest wymagany` });
+        return res.status(400).json({ message: `Driver on pos ${position} is required` });
       }
     }
 
@@ -39,7 +39,7 @@ export const createBet = async (req, res) => {
     const requiredBonusFields = ["polePosition", "fastestLap", "driverOfTheDay", "noDNFs"];
     for (const field of requiredBonusFields) {
       if (bonusBets[field] === undefined) {
-        return res.status(400).json({ message: `Pole ${field} jest wymagane` });
+        return res.status(400).json({ message: `Field ${field} is required` });
       }
     }
 
@@ -47,7 +47,7 @@ export const createBet = async (req, res) => {
     const existingBet = await User.findOne({ _id: userId, "bets.race": raceId }, { "bets.$": 1 }).exec();
 
     if (existingBet) {
-      return res.status(400).json({ message: "Zakład dla tego wyścigu już istnieje" });
+      return res.status(400).json({ message: "Bet for this race already exists" });
     }
 
     // Utwórz nowy zakład bezpośrednio w dokumencie użytkownika
@@ -65,7 +65,7 @@ export const createBet = async (req, res) => {
     const result = await User.findByIdAndUpdate(userId, { $push: { bets: newBet } }, { new: true, runValidators: true }).exec();
 
     if (!result) {
-      return res.status(404).json({ message: "Użytkownik nie został znaleziony" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     // Znajdź dodany zakład (ostatni w tablicy)
@@ -73,7 +73,7 @@ export const createBet = async (req, res) => {
 
     res.status(201).json(addedBet);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas tworzenia zakładu", error: error.message });
+    res.status(500).json({ message: "Error while creating bet", error: error.message });
   }
 };
 
@@ -85,19 +85,19 @@ export const getBetById = async (req, res) => {
 
     // Sprawdź, czy ID jest prawidłowym obiektem ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(betId)) {
-      return res.status(400).json({ message: "Nieprawidłowy format ID" });
+      return res.status(400).json({ message: "Invalid ID" });
     }
 
     // Używaj zapytania findOne zamiast agregacji
     const result = await User.findOne({ _id: userId, "bets._id": betId }, { "bets.$": 1 }).exec();
 
     if (!result || !result.bets || result.bets.length === 0) {
-      return res.status(404).json({ message: "Zakład nie został znaleziony" });
+      return res.status(404).json({ message: "Bet not found" });
     }
 
     res.status(200).json(result.bets[0]);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas pobierania zakładu", error: error.message });
+    res.status(500).json({ message: "Error while getting bet", error: error.message });
   }
 };
 
@@ -110,30 +110,30 @@ export const updateBet = async (req, res) => {
 
     // Sprawdź, czy ID jest prawidłowym obiektem ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(betId)) {
-      return res.status(400).json({ message: "Nieprawidłowy format ID" });
+      return res.status(400).json({ message: "Invalid ID" });
     }
 
     // Najpierw sprawdź, czy zakład ma status "finished"
     const existingBet = await User.findOne({ _id: userId, "bets._id": betId }, { "bets.$": 1 }).exec();
 
     if (!existingBet) {
-      return res.status(404).json({ message: "Zakład nie został znaleziony" });
+      return res.status(404).json({ message: "Bet not found" });
     }
 
     if (existingBet.bets[0].status === "finished") {
-      return res.status(400).json({ message: "Nie można zaktualizować zakończonego zakładu" });
+      return res.status(400).json({ message: "Bet is already closed" });
     }
 
     // Sprawdź czy termin na zakłady nie minął
     const race = await Race.findById(existingBet.bets[0].race).exec();
     if (!race) {
-      return res.status(404).json({ message: "Wyścig nie został znaleziony" });
+      return res.status(404).json({ message: "Race not found" });
     }
 
     const now = new Date();
     if (race.betDeadline && new Date(race.betDeadline) < now) {
       return res.status(400).json({
-        message: "Termin składania zakładów dla tego wyścigu minął",
+        message: "Bets for this race have been closed",
         deadline: race.betDeadline,
         currentTime: now,
       });
@@ -166,7 +166,7 @@ export const updateBet = async (req, res) => {
     const result = await User.findOneAndUpdate({ _id: userId, "bets._id": betId }, { $set: updates }, { new: true, runValidators: true }).exec();
 
     if (!result) {
-      return res.status(404).json({ message: "Nie udało się zaktualizować zakładu" });
+      return res.status(404).json({ message: "Failed to update bet" });
     }
 
     // Znajdź zaktualizowany zakład
@@ -174,7 +174,7 @@ export const updateBet = async (req, res) => {
 
     res.status(200).json(updatedBet);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas aktualizacji zakładu", error: error.message });
+    res.status(500).json({ message: "Error while updating bet", error: error.message });
   }
 };
 
@@ -186,26 +186,26 @@ export const deleteBet = async (req, res) => {
 
     // Sprawdź, czy ID jest prawidłowym obiektem ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(betId)) {
-      return res.status(400).json({ message: "Nieprawidłowy format ID" });
+      return res.status(400).json({ message: "Invalid ID" });
     }
 
     // Znajdź zakład przed usunięciem, aby pobrać ID wyścigu
     const existingBet = await User.findOne({ _id: userId, "bets._id": betId }, { "bets.$": 1 }).exec();
 
     if (!existingBet || !existingBet.bets || existingBet.bets.length === 0) {
-      return res.status(404).json({ message: "Zakład nie został znaleziony" });
+      return res.status(404).json({ message: "Bet not found" });
     }
 
     // Sprawdź czy termin na zakłady nie minął
     const race = await Race.findById(existingBet.bets[0].race).exec();
     if (!race) {
-      return res.status(404).json({ message: "Wyścig powiązany z zakładem nie został znaleziony" });
+      return res.status(404).json({ message: "Race not found" });
     }
 
     const now = new Date();
     if (race.betDeadline && new Date(race.betDeadline) < now) {
       return res.status(400).json({
-        message: "Termin usuwania zakładów dla tego wyścigu minął",
+        message: "Bets for this race have been closed",
         deadline: race.betDeadline,
         currentTime: now,
       });
@@ -215,12 +215,12 @@ export const deleteBet = async (req, res) => {
     const result = await User.findByIdAndUpdate(userId, { $pull: { bets: { _id: betId } } }, { new: true }).exec();
 
     if (!result) {
-      return res.status(404).json({ message: "Użytkownik nie został znaleziony" });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ message: "Zakład został pomyślnie usunięty" });
+    res.status(200).json({ message: "Bet deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas usuwania zakładu", error: error.message });
+    res.status(500).json({ message: "Error while deleting bet", error: error.message });
   }
 };
 
@@ -231,18 +231,18 @@ export const getAllUserBets = async (req, res) => {
 
     // Sprawdź, czy ID jest prawidłowym obiektem ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Nieprawidłowy format ID użytkownika" });
+      return res.status(400).json({ message: "Invalid user ID" });
     }
 
     // Używaj projekcji do pobrania tylko zakładów zamiast całego dokumentu użytkownika
     const result = await User.findById(userId, { bets: 1, _id: 0 }).exec();
 
     if (!result) {
-      return res.status(404).json({ message: "Użytkownik nie został znaleziony" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     res.status(200).json(result.bets);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas pobierania zakładów", error: error.message });
+    res.status(500).json({ message: "Error while getting bets", error: error.message });
   }
 };

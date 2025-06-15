@@ -111,7 +111,9 @@ const LeaderboardPage = () => {
                           {user.username.charAt(0).toUpperCase()}
                         </Avatar>
                         <div>
-                          <Text fw={500}>{user.username}</Text>
+                          <Text className={isCurrentUser(user.username) ? classes.currentUserText : undefined} fw={500}>
+                            {user.username}
+                          </Text>
                           {user.role === "admin" && (
                             <Badge size="xs" color="blue">
                               Admin
@@ -120,7 +122,7 @@ const LeaderboardPage = () => {
                         </div>
                       </Group>
                     </Table.Td>
-                    <Table.Td align="right">
+                    <Table.Td align="left">
                       <Text fw={700} size="lg">
                         {user.pointsSum || 0}
                       </Text>

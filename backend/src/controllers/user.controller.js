@@ -99,7 +99,7 @@ export const registerUser = async (req, res) => {
     await user.save();
 
     res.status(200).json({
-      message: "Rejestracja zakończona pomyślnie",
+      message: "Registration successful",
       userId: user._id,
       username: user.username,
       email: user.email,
@@ -215,7 +215,7 @@ export const getLeaderboard = async (req, res) => {
 
     res.status(200).json(leaderboard);
   } catch (error) {
-    res.status(500).json({ message: "Wystąpił błąd podczas pobierania tablicy liderów", error: error.message });
+    res.status(500).json({ message: "Error while getting leaderboards", error: error.message });
   }
 };
 
@@ -224,12 +224,12 @@ export const loginUser = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
-      return res.status(400).json({ message: "Invalid password" });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
     generateToken(user._id, res);
     res.status(200).json({
